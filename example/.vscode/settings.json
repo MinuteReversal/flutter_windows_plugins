@@ -1,0 +1,21 @@
+{
+    "dart.flutterSdkPath": "C:/flutter/flutter",
+    "dart.debugExternalPackageLibraries": true,
+    "terminal.integrated.env.windows": {
+      "PATH": "${env:PATH};C:/flutter/flutter/bin"
+    },
+    "terminal.integrated.shell.windows": "cmd.exe",
+    "terminal.integrated.shellArgs.windows": [
+      "/k",
+      "C:/Program Files/Microsoft Visual Studio/2022/Community/Common7/Tools/VsDevCmd.bat"
+    ],
+    "terminal.integrated.enableBell": true,
+    "clangd.fallbackFlags": [
+      "-IC:/flutter/flutter/bin/cache/artifacts/engine/windows-x64",      
+      "-ID:/repository/flutter_windows_plugins/example/windows/flutter/ephemeral/.plugin_symlinks/flutter_windows_plugins/example/windows/flutter/ephemeral/cpp_client_wrapper/include",
+    ],
+    "cmake.sourceDirectory": "${workspaceFolder}/windows",
+    "audioCues.terminalQuickFix": "on",
+    "cmake.configureOnOpen": false
+  }
+  
