@@ -1,5 +1,7 @@
 import 'dart:ffi';
+import 'package:ffi/ffi.dart';
 import 'dart:developer';
+import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'dart:async';
@@ -9,6 +11,28 @@ import 'package:flutter_windows_plugins/flutter_windows_plugins.dart';
 
 void main() {
   runApp(const MyApp());
+}
+
+class MainPainter extends CustomPainter {
+  final ui.Image image;
+
+  MainPainter(this.image);
+
+  @override
+  void paint(Canvas canvas, ui.Size size) {
+    //实例化画笔
+    final paint = Paint();
+    //设置画笔
+    paint.color = Colors.black;
+    paint.strokeWidth = 2; //线宽
+    paint.style = PaintingStyle.stroke; //画边框
+    canvas.drawImage(image, Offset.zero, paint);
+  }
+
+  @override
+  bool shouldRepaint(CustomPainter oldDelegate) {
+    return true;
+  }
 }
 
 class MyApp extends StatefulWidget {
@@ -21,6 +45,9 @@ class MyApp extends StatefulWidget {
 class _MyAppState extends State<MyApp> {
   String _platformVersion = 'Unknown';
   int textureId = -1;
+  ui.Image? ffiImage;
+  Uint8List? memoryImage;
+
   final _flutterWindowsPluginsPlugin = FlutterWindowsPlugins();
 
   @override
@@ -121,6 +148,17 @@ class _MyAppState extends State<MyApp> {
               ElevatedButton(onPressed: onFFiFn2, child: const Text("ffi fn2")),
               ElevatedButton(onPressed: onFFiFn3, child: const Text("ffi fn3")),
               ElevatedButton(onPressed: onFFiFn4, child: const Text("ffi fn4")),
+              ElevatedButton(onPressed: onFFiCreateImage, child: const Text("ffi image")),
+              if (ffiImage != null)
+                SizedBox(
+                  width: 256,
+                  height: 256,
+                  child: CustomPaint(
+                    painter: MainPainter(ffiImage!),
+                  ),
+                ),
+              ElevatedButton(onPressed: onLoadImage, child: const Text("memory image")),
+              if (memoryImage != null) Image.memory(memoryImage!),
             ],
           ),
         ),
@@ -128,12 +166,61 @@ class _MyAppState extends State<MyApp> {
     );
   }
 
-  void onFFiFn4() {
+  Future<void> onLoadImage() async {
+    Uint8List image = (await rootBundle.load('assets/images/red.png')).buffer.asUint8List();
+    // Uint8List netImage = (await NetworkAssetBundle(Uri.parse('https://bing.com')).load("")).buffer.asUint8List();
+    setState(() {
+      memoryImage = image;
+    });
+  }
+
+  void onFFiCreateImage() async {
+    final imagedata = await createImage();
+    setState(() {
+      ffiImage = imagedata;
+    });
+  }
+
+  Future<ui.Image> createImage() {
     const libraryPath = "dll_main.dll"; //~/example/dll_main.dll
     final dylib = DynamicLibrary.open(libraryPath);
-    final int Function(int) fn4 = dylib.lookup<NativeFunction<Int32 Function(Int32)>>('fn4').asFunction();
-    final result = fn4(4);
-    log(result.toString());
+
+    /// 深拷贝图片
+    Pointer<Uint8> bytes = calloc.allocate<Uint8>(256 * 256 * 4);
+
+    final color = "red".toNativeUtf8();
+    final void Function(Pointer<Uint8>, Pointer<Utf8>, int, int) getImage = dylib
+        .lookup<NativeFunction<Void Function(Pointer<Uint8>, Pointer<Utf8>, Int32, Int32)>>('CreateColorImage')
+        .asFunction();
+    getImage(bytes, color, 256, 256);
+
+    final image = bytes.asTypedList(256 * 256 * 4);
+
+    //release
+    malloc.free(color);
+    malloc.free(bytes);
+
+    final completer = Completer<ui.Image>();
+
+    ui.decodeImageFromPixels(image, 256, 256, ui.PixelFormat.rgba8888, ((result) {
+      completer.complete(result);
+    }), rowBytes: 256 * 4, targetWidth: 256, targetHeight: 256);
+
+    return completer.future;
+  }
+
+  void onFFiFn1() {
+    const libraryPath = "dll_main.dll"; //~/example/dll_main.dll
+    final dylib = DynamicLibrary.open(libraryPath);
+    final void Function() fn1 = dylib.lookup<NativeFunction<Void Function()>>('fn1').asFunction();
+    fn1();
+  }
+
+  void onFFiFn2() {
+    const libraryPath = "dll_main.dll"; //~/example/dll_main.dll
+    final dylib = DynamicLibrary.open(libraryPath);
+    final void Function(int) fn2 = dylib.lookup<NativeFunction<Void Function(Int32)>>('fn2').asFunction();
+    fn2(2);
   }
 
   void onFFiFn3() {
@@ -144,18 +231,12 @@ class _MyAppState extends State<MyApp> {
     log(result.toString());
   }
 
-  void onFFiFn2() {
+  void onFFiFn4() {
     const libraryPath = "dll_main.dll"; //~/example/dll_main.dll
     final dylib = DynamicLibrary.open(libraryPath);
-    final void Function(int) fn2 = dylib.lookup<NativeFunction<Void Function(Int32)>>('fn2').asFunction();
-    fn2(2);
-  }
-
-  void onFFiFn1() {
-    const libraryPath = "dll_main.dll"; //~/example/dll_main.dll
-    final dylib = DynamicLibrary.open(libraryPath);
-    final void Function() fn1 = dylib.lookup<NativeFunction<Void Function()>>('fn1').asFunction();
-    fn1();
+    final int Function(int) fn4 = dylib.lookup<NativeFunction<Int32 Function(Int32)>>('fn4').asFunction();
+    final result = fn4(4);
+    log(result.toString());
   }
 
   void onPickFile() async {
