@@ -2,10 +2,16 @@
   "terminal.integrated.env.windows": {
     "PATH": "${env:PATH};C:/flutter/flutter/bin"
   },
-  "terminal.integrated.shell.windows": "cmd.exe",
-  "terminal.integrated.shellArgs.windows": [
-    "/k",
-    "C:/Program Files/Microsoft Visual Studio/2022/Community/Common7/Tools/VsDevCmd.bat"
-  ],
+  //https://code.visualstudio.com/docs/terminal/basics#:~:text=Terminal%20profiles%20are%20platform-specific%20shell%20configurations%20comprised%20of,which%20is%20also%20accessible%20via%20the%20terminal%20dropdown.
+  "terminal.integrated.defaultProfile.windows": "Command Prompt",
+  "terminal.integrated.profiles.windows": {
+    "Command Prompt": {
+      "path": "C:\\Windows\\System32\\cmd.exe",
+      "args": [
+        "/k",
+        "C:/Program Files/Microsoft Visual Studio/2022/Community/Common7/Tools/VsDevCmd.bat"
+      ]
+    }
+  },
   "cmake.sourceDirectory": "${workspaceFolder}/example/windows"
 }

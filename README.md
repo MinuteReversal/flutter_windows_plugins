@@ -16,4 +16,3 @@ A new Flutter plugin project.
 [C interop using dart:ffi](https://dart.dev/guides/libraries/c-interop)  
 [samples](https://github.com/flutter/samples)  
 [invokeMethod](https://api.flutter.dev/flutter/services/MethodChannel/invokeMethod.html)
-[ffplay](https://blog.csdn.net/u013113678/article/details/127990764)
